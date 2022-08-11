@@ -367,11 +367,17 @@ def connectors():
             this_level_t = place_on_grid(row, next_col)
             all_connectors.append(
                 hull(
-                    this_t(web_post_br), this_level_t(web_post_bl), next_t(web_post_tl),
+                    this_t(web_post_br),
+                    this_level_t(web_post_bl),
+                    next_t(web_post_tl),
                 )
             )
             all_connectors.append(
-                hull(this_t(web_post_br), next_t(web_post_tl), next_t(web_post_bl),)
+                hull(
+                    this_t(web_post_br),
+                    next_t(web_post_tl),
+                    next_t(web_post_bl),
+                )
             )
         if next_row == row - 1:
             this_t = place_on_grid(row, col)
@@ -380,12 +386,18 @@ def connectors():
 
             all_connectors.append(
                 hull(
-                    this_t(web_post_tr), this_level_t(web_post_br), next_t(web_post_bl),
+                    this_t(web_post_tr),
+                    this_level_t(web_post_br),
+                    next_t(web_post_bl),
                 )
             )
 
             all_connectors.append(
-                hull(this_t(web_post_tr), this_t(web_post_br), next_t(web_post_bl),)
+                hull(
+                    this_t(web_post_tr),
+                    this_t(web_post_br),
+                    next_t(web_post_bl),
+                )
             )
 
     def does_diag_exist(row, col):
@@ -586,7 +598,9 @@ def all_caps():
 
 
 def post_test():
-    return union(*[y for x in short_web_posts for y in x],)
+    return union(
+        *[y for x in short_web_posts for y in x],
+    )
 
 
 thumb_basic_postition = point_on_grid(num_rows_for_col(1), 1, 0, 0, 0)
@@ -614,7 +628,7 @@ thumb_bl_placer = thumb_placer([4, -10, 27], [-35.3, -38.2, -18])
 thumb_br_placer = thumb_placer([4, -26, 18], [-15.8, -30.7, -11.6])
 
 thumb_placement_fns = [
-    thumb_r_placer,
+    # thumb_r_placer,
     thumb_m_placer,
     thumb_l_placer,
     thumb_br_placer,
@@ -629,11 +643,11 @@ def thumbs_post_offsets(placer, post):
         if post == square_idx_tr:
             return [0, -3.8, 0]
 
-    if placer == thumb_r_placer:
-        if post == square_idx_bl:
-            return [20, 0, 0]
-        if post == square_idx_tl:
-            return [4, 0, 0]
+    # if placer == thumb_r_placer:
+    #     if post == square_idx_bl:
+    #         return [20, 0, 0]
+    #     if post == square_idx_tl:
+    #         return [4, 0, 0]
 
     if placer == thumb_bl_placer:
         if post == square_idx_br:
@@ -693,28 +707,28 @@ def thumb_walls():
             thumb_m_placer, square_idx_tl, thumb_m_placer, square_idx_tr, walls=False
         ),
         thumb_wall(
-            thumb_m_placer, square_idx_tr, thumb_r_placer, square_idx_tl, walls=False
+            thumb_m_placer, square_idx_br, thumb_m_placer, square_idx_tr, walls=False
         ),
-        thumb_wall(
-            thumb_r_placer, square_idx_tl, thumb_r_placer, square_idx_tr, walls=False
-        ),
-        thumb_wall(
-            thumb_r_placer, square_idx_tr, thumb_r_placer, square_idx_br, walls=False
-        ),
+        # thumb_wall(
+        #     thumb_r_placer, square_idx_tl, thumb_r_placer, square_idx_tr, walls=False
+        # ),
+        # thumb_wall(
+        #     thumb_r_placer, square_idx_tr, thumb_r_placer, square_idx_br, walls=False
+        # ),
         thumb_wall(thumb_br_placer, square_idx_br, thumb_br_placer, square_idx_tr),
-        thumb_wall(
-            thumb_r_placer,
-            square_idx_bl,
-            thumb_r_placer,
-            square_idx_br,
-            walls=False,
-            connectors=False,
-        ),
+        # thumb_wall(
+        #     thumb_r_placer,
+        #     square_idx_bl,
+        #     thumb_r_placer,
+        #     square_idx_br,
+        #     walls=False,
+        #     connectors=False,
+        # ),
         hull(
             get_offset_thumb_placer(thumb_br_placer, square_idx_tr, top_dot),
-            get_offset_thumb_placer(thumb_r_placer, square_idx_bl, top_dot),
+            get_offset_thumb_placer(thumb_m_placer, square_idx_br, top_dot),
             get_offset_thumb_placer(
-                thumb_r_placer, square_idx_bl, switch_riser_raw_dot
+                thumb_m_placer, square_idx_br, switch_riser_raw_dot
             ),
         ),
         hull(
@@ -723,15 +737,15 @@ def thumb_walls():
                 thumb_br_placer, square_idx_tr, switch_riser_raw_dot
             ),
             get_offset_thumb_placer(
-                thumb_r_placer, square_idx_bl, switch_riser_raw_dot
+                thumb_m_placer, square_idx_br, switch_riser_raw_dot
             ),
         ),
         hull(
             get_offset_thumb_placer(
-                thumb_r_placer, square_idx_br, switch_riser_raw_dot
+                thumb_m_placer, square_idx_br, switch_riser_raw_dot
             ),
             get_offset_thumb_placer(
-                thumb_r_placer, square_idx_bl, switch_riser_raw_dot
+                thumb_m_placer, square_idx_br, switch_riser_raw_dot
             ),
             get_offset_thumb_placer(
                 thumb_br_placer, square_idx_tr, switch_riser_raw_dot
@@ -740,7 +754,7 @@ def thumb_walls():
         bottom_hull(
             hull(
                 get_offset_thumb_placer(
-                    thumb_r_placer, square_idx_br, switch_riser_raw_dot
+                    thumb_m_placer, square_idx_br, switch_riser_raw_dot
                 ),
                 get_offset_thumb_placer(
                     thumb_br_placer, square_idx_tr, switch_riser_raw_dot
@@ -811,29 +825,31 @@ def thumb_connectors():
             thumb_r_placer(web_post_bl),
             thumb_br_placer(web_post_tl),
         ),
-        hull(
-            thumb_r_placer(web_post_bl),
-            thumb_br_placer(web_post_tl),
-            br_tr_with_offset,
-        ),
-        hull(
-            thumb_r_placer(web_post_bl), thumb_r_placer(web_post_br), br_tr_with_offset,
-        ),
+        # hull(
+        #     thumb_r_placer(web_post_bl),
+        #     thumb_br_placer(web_post_tl),
+        #     br_tr_with_offset,
+        # ),
+        # hull(
+        #     thumb_r_placer(web_post_bl),
+        #     thumb_r_placer(web_post_br),
+        #     br_tr_with_offset,
+        # ),
         # Right special connectors
-        hull(
-            right_thumb_cover_sphere,
-            get_offset_thumb_placer(thumb_r_placer, square_idx_bl, web_post),
-            thumb_r_placer(web_post_br),
-            get_offset_thumb_placer(thumb_r_placer, square_idx_br, web_post),
-        ),
-        hull(
-            right_thumb_cover_sphere,
-            get_offset_thumb_placer(thumb_r_placer, square_idx_bl, web_post),
-            get_offset_thumb_placer(
-                thumb_br_placer, square_idx_tr, switch_riser_raw_dot
-            ),
-            br_tr_with_offset,
-        ),
+        # hull(
+        #     right_thumb_cover_sphere,
+        #     get_offset_thumb_placer(thumb_r_placer, square_idx_bl, web_post),
+        #     thumb_r_placer(web_post_br),
+        #     get_offset_thumb_placer(thumb_r_placer, square_idx_br, web_post),
+        # ),
+        # hull(
+        #     right_thumb_cover_sphere,
+        #     get_offset_thumb_placer(thumb_r_placer, square_idx_bl, web_post),
+        #     get_offset_thumb_placer(
+        #         thumb_br_placer, square_idx_tr, switch_riser_raw_dot
+        #     ),
+        #     br_tr_with_offset,
+        # ),
         # Left special connectors
         hull(
             thumb_l_placer(web_post_bl),
@@ -873,7 +889,7 @@ def thumb_to_body_connectors():
     return union(
         bottom_hull(
             hull(
-                thumb_r_placer(
+                thumb_m_placer(
                     get_in_square(switch_riser_offset_square, square_idx_br)(
                         switch_riser_raw_dot
                     )
@@ -886,12 +902,12 @@ def thumb_to_body_connectors():
             )
         ),
         hull(
-            thumb_r_placer(
+            thumb_m_placer(
                 get_in_square(switch_riser_offset_square, square_idx_br)(
                     switch_riser_raw_dot
                 )
             ),
-            thumb_r_placer(
+            thumb_m_placer(
                 get_in_square(switch_riser_offset_square, square_idx_tr)(
                     switch_riser_raw_dot
                 )
@@ -903,7 +919,7 @@ def thumb_to_body_connectors():
             ),
         ),
         hull(
-            thumb_r_placer(
+            thumb_m_placer(
                 get_in_square(switch_riser_offset_square, square_idx_tr)(
                     switch_riser_raw_dot
                 )
@@ -920,12 +936,12 @@ def thumb_to_body_connectors():
             ),
         ),
         hull(
-            thumb_r_placer(
+            thumb_m_placer(
                 get_in_square(switch_riser_offset_square, square_idx_tr)(
                     switch_riser_raw_dot
                 )
             ),
-            thumb_r_placer(
+            thumb_m_placer(
                 get_in_square(switch_riser_offset_square, square_idx_tl)(
                     switch_riser_raw_dot
                 )
@@ -1088,7 +1104,9 @@ def trrs_holder():
 def trrs_holder_hole():
     rect_hole = cube(*trrs_holder_size)
     rect_hole = translate(
-        -trrs_holder_size[0] / 2, -trrs_holder_size[1], -trrs_holder_size[2] / 2,
+        -trrs_holder_size[0] / 2,
+        -trrs_holder_size[1],
+        -trrs_holder_size[2] / 2,
     )(rect_hole)
 
     cylinder_hole = cylinder(*trrs_hole_size, segments=30)
@@ -1200,7 +1218,6 @@ def right_shell():
             thumb_connectors(),
             # thumb_caps(),
             thumb_to_body_connectors(),
-
             # trrs_holder(),
             usb_holder_rim(),
         ),
@@ -1226,7 +1243,11 @@ screw_hole_radius = 1.7
 
 
 def wall_shape():
-    walls_3d = union(case_walls(), thumb_walls(), thumb_to_body_connectors(),)
+    walls_3d = union(
+        case_walls(),
+        thumb_walls(),
+        thumb_to_body_connectors(),
+    )
 
     walls_2d = offset(0.4)(project(cut=True))(translate(0, 0, -0.1)(walls_3d))
 
@@ -1357,7 +1378,9 @@ def thumb_corner():
             # thumb_caps(),
             thumb_to_body_connectors(),
         ),
-        union(blocker(),),
+        union(
+            blocker(),
+        ),
     )
 
 
