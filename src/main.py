@@ -35,7 +35,7 @@ mount_height = keyswitch_height
 mount_width = keyswitch_width
 # use 10 for faster prototyping, 15 for real
 tenting_angle = 11.0
-z_offset = 9.0
+z_offset = 7
 
 should_include_risers = False
 
@@ -270,7 +270,7 @@ def column_offset(col):
     if col == 2:  # 中指列
         return [1, 7, -3]     # x右移1mm, y前移5mm, z下移3mm
     elif col == 3:  # 无名指列
-        return [3, 2, -1.5]   # x右移3mm, y不动, z下移0.5mm
+        return [3, 2, -1.5]   # x右移3mm, y不动, z下移0.5mm  
     elif is_pinky(col):
         return [7.0, -12.5, 5.0]
     else:
@@ -1016,12 +1016,12 @@ def blocker():
     return shape
 
 
-screw_insert_height = 4.2
+screw_insert_height = 2.2
 screw_insert_bottom_radius = 5.31 / 2.0
 screw_insert_top_radius = 5.1 / 2
 
 screw_insert_width = 2
-bottom_height = 2
+bottom_height = 1.5
 
 screw_insert_outer = translate(0, 0, bottom_height)(
     cylinderr1r2(
