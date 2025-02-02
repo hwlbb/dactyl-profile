@@ -8,3 +8,4 @@ regex==2019.12.20
 six==1.14.0
 solidpython==0.4.8
 watchdog==0.10.2
+numpy==2.0.2

@@ -7,7 +7,7 @@ import mat
 
 switch_thickness = 1.3
 switch_top_thickness = 2.8
-web_thickness = 3
+web_thickness = 3        # 保持3mm不变
 switch_rim_thickness = 2
 
 post_width = 0.5
@@ -178,11 +178,11 @@ def all_of_shape(shape):
     return [grid_position(row, col, shape) for (row, col) in row_cols()]
 
 
-web_post = translate(-post_rad, -post_rad, switch_thickness - web_thickness)(
-    cube(post_width, post_width, web_thickness)
+web_post = translate(-post_rad, -post_rad, 0)(  # 改为从z=0开始
+    cube(post_width, post_width, switch_thickness)  # 高度改为switch_thickness
 )
-short_web_post = translate(-post_rad, -post_rad, 0)(
-    cube(post_width, post_width, post_width)
+short_web_post = translate(-post_rad, -post_rad, 0)(  # 同样从z=0开始
+    cube(post_width, post_width, switch_thickness)  # 高度也改为switch_thickness
 )
 
 SQUARE_OFFSET_IDXS = [
@@ -267,12 +267,12 @@ def get_short_inner_web_post(idx):
 
 
 def column_offset(col):
-    if col == 2:
-        return [1, 5, -3]
-    elif col == 3:
-        return [3, 0, -0.5]
+    if col == 2:  # 中指列
+        return [1, 7, -3]     # x右移1mm, y前移5mm, z下移3mm
+    elif col == 3:  # 无名指列
+        return [3, 2, -1.5]   # x右移3mm, y不动, z下移0.5mm
     elif is_pinky(col):
-        return [7.0, -14.5, 5.0]
+        return [7.0, -12.5, 5.0]
     else:
         return [0, 0, 0]
 
@@ -610,8 +610,9 @@ thumb_r_placer = thumb_placer([14, -26, 12], [-17.4, -11.8, -4.2])
 thumb_m_placer = thumb_placer([8, -17, 22], [-36, -17.6, -12])
 thumb_l_placer = thumb_placer([6, -5, 30], [-54, -26.5, -16])
 
-thumb_bl_placer = thumb_placer([4, -10, 27], [-35.3, -38.2, -18])
-thumb_br_placer = thumb_placer([4, -26, 18], [-15.8, -30.7, -11.6])
+# 修改这两行来降低拇指区第二行
+thumb_bl_placer = thumb_placer([4, -10, 27], [-35.3, -38.2, -19])  # 原来是-18
+thumb_br_placer = thumb_placer([4, -26, 18], [-15.8, -30.7, -12.6])  # 原来是-11.6
 
 thumb_placement_fns = [
     thumb_r_placer,
