@@ -33,7 +33,8 @@ extra_width = 2.5
 mount_height = keyswitch_height + 3.0
 mount_width = keyswitch_width + 3.0
 # use 10 for faster prototyping, 15 for real
-tenting_angle = 10.0
+tenting_angle = 11.0  # 增加左右倾斜角度
+keyboard_y_rotation = 8.0  # 添加整体后倾角度
 z_offset = 8.0
 
 should_include_risers = False
@@ -43,8 +44,12 @@ def is_pinky(col):
 
 # aka: alpha
 def row_curve_deg(col):
-    # I tried to have a different curve for pinkys, but it didn't work well
-    return 17
+    if col == 1:  # 食指列
+        return 20  # 增加弯曲度
+    elif col >= num_cols - num_pinky_columns:  # 小拇指列
+        return 22  # 增加弯曲度
+    else:
+        return 17  # 保持其他列不变
 
 # aka: beta
 col_curve_deg = 4.0
@@ -224,11 +229,11 @@ def get_short_inner_web_post(idx):
 
 def column_offset(col):
      if col == 2:
-         return [0, 5, -3]
+         return [0, 7, -3]
      elif col == 3:
-         return [0, 0, -0.5]
+         return [0, 3, -1.5]  # 将z轴偏移从-0.5改为-3.5
      elif is_pinky(col):
-         return [1.0, -14.5, 5.0]
+         return [1.0, -12.5, 5.0]
      else:
          return [0, 0, 0]
 
@@ -260,7 +265,8 @@ def place_on_grid_base(row, column, domain):
             # Column offset
             domain.translate(*column_offset(column)),
             # Misc
-            domain.rotate_y(tenting_angle),
+            domain.rotate_y(tenting_angle),  # 左右倾斜
+            domain.rotate_x(keyboard_y_rotation),  # 整体后倾
             domain.translate(0, 0, z_offset),
             )
 
@@ -813,12 +819,12 @@ def blocker():
     return shape
 
 
-screw_insert_height = 4.2
+screw_insert_height = 2.5
 screw_insert_bottom_radius = 5.31 / 2.0
 screw_insert_top_radius = 5.1 / 2
 
 screw_insert_width = 2
-bottom_height = 2
+bottom_height = 1.5 
 
 screw_insert_outer = translate(0, 0, bottom_height)(cylinderr1r2(screw_insert_bottom_radius + screw_insert_width, screw_insert_top_radius + screw_insert_width, screw_insert_height + screw_insert_width))
 screw_insert_inner = translate(0, 0, bottom_height)(cylinderr1r2(screw_insert_bottom_radius, screw_insert_top_radius, screw_insert_height))
@@ -832,12 +838,13 @@ def screw_insert(col, row, shape, ox, oy):
 
 def screw_insert_all_shapes(shape):
     return union(
-        screw_insert(2, 0, shape, -5.3, 5.9),
-        screw_insert(num_cols - 1, 0, shape, 6.7, 5.5),
-        screw_insert(num_cols - 1, num_rows_for_col(num_cols - 1), shape, 6.8, 14.4),
-        screw_insert(0, 0, shape, -6.2, -6),
-        screw_insert(1, max_num_rows + 1, shape, -7.8, 3.4),
-        screw_insert(0, max_num_rows - 1, shape, -13.4, 1.7),
+        screw_insert(2, 0, shape, -5.3, 5.3), 
+        screw_insert(num_cols - 1, 0, shape, 6.7, 4.7),  
+        screw_insert(num_cols - 1, num_rows_for_col(num_cols - 1), shape, -31, 14), 
+        screw_insert(0, 0, shape, -4.7, 5.3),  
+        # 底部两个螺丝孔
+        screw_insert(1, max_num_rows + 1, shape, -9.7, 3.7),  
+        screw_insert(0, max_num_rows - 1, shape, -13.3, 1.7),  
     )
 
 trrs_holder_size = [6.0, 11.0, 7.0]
