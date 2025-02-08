@@ -46,9 +46,12 @@ def is_pinky(col):
 
 # aka: alpha
 def row_curve_deg(col):
-    # I tried to have a different curve for pinkys, but it didn't work well
-    return 17
-
+    if col == 1:  # 食指列
+        return 20  # 增加弯曲度
+    elif col >= num_cols - num_pinky_columns:  # 小拇指列
+        return 22  # 增加弯曲度
+    else:
+        return 17  # 保持其他列不变
 
 # aka: beta
 col_curve_deg = 4.0
@@ -178,11 +181,11 @@ def all_of_shape(shape):
     return [grid_position(row, col, shape) for (row, col) in row_cols()]
 
 
-web_post = translate(-post_rad, -post_rad, 0)(  # 改为从z=0开始
-    cube(post_width, post_width, switch_thickness)  # 高度改为switch_thickness
+web_post = translate(-post_rad, -post_rad, switch_thickness - web_thickness)(
+    cube(post_width, post_width, web_thickness)
 )
-short_web_post = translate(-post_rad, -post_rad, 0)(  # 同样从z=0开始
-    cube(post_width, post_width, switch_thickness)  # 高度也改为switch_thickness
+short_web_post = translate(-post_rad, -post_rad, 0)(
+    cube(post_width, post_width, post_width)
 )
 
 SQUARE_OFFSET_IDXS = [
@@ -1047,11 +1050,11 @@ def screw_insert(col, row, shape, ox, oy):
 
 def screw_insert_all_shapes(shape):
     return union(
-        screw_insert(2, 0, shape, -5.3, 5.9),
+        screw_insert(2, 0, shape, -4.5, 5.9),
         screw_insert(num_cols - 1, 0, shape, 6.7, 5.5),
         screw_insert(num_cols - 1, num_rows_for_col(num_cols - 1), shape, 6.8, 14.4),
         screw_insert(0, 0, shape, -6.2, -6),
-        screw_insert(1, max_num_rows + 1, shape, -9.8, 3.4),
+        screw_insert(1, max_num_rows + 1, shape, -11.4, 3.4),
         screw_insert(0, max_num_rows - 1, shape, -17.4, -2),
     )
 
