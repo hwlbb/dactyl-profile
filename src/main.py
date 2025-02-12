@@ -244,40 +244,44 @@ def col_z_rotate(col):
         return 0
 
 def place_on_grid_base(row, column, domain):
+    """计算给定行列位置的变换矩阵"""
     column_angle = col_curve_deg * (center_col - column)
     row_angle = row_curve_deg(column) * (center_row - row)
 
-    return domain.compose(
-            # Row Sphere
-            domain.translate(0, 0, -row_radius(column)),
-            domain.rotate_x(row_angle),
-            domain.translate(0, 0, row_radius(column)),
-            # Row Offset
-            # column_extra_transform(column),
-            # Col sphere
-            domain.translate(0, 0, -column_radius),
-            domain.rotate_y(column_angle),
-            domain.translate(0, 0, column_radius),
+    # 使用矩阵乘法组合所有变换
+    transforms = [
+        # Row Sphere
+        domain.translate(0, 0, -row_radius(column)),
+        domain.rotate_x(row_angle),
+        domain.translate(0, 0, row_radius(column)),
+        
+        # Col sphere
+        domain.translate(0, 0, -column_radius),
+        domain.rotate_y(column_angle),
+        domain.translate(0, 0, column_radius),
 
-            # Z Fix
-            domain.rotate_z(col_z_rotate(column)),
+        # Z Fix
+        domain.rotate_z(col_z_rotate(column)),
 
-            # Column offset
-            domain.translate(*column_offset(column)),
-            # Misc
-            domain.rotate_y(tenting_angle),  # 左右倾斜
-            domain.rotate_x(keyboard_y_rotation),  # 整体后倾
-            domain.translate(0, 0, z_offset),
-            )
+        # Column offset
+        domain.translate(*column_offset(column)),
+        
+        # Misc
+        domain.rotate_y(tenting_angle),  # 左右倾斜
+        domain.rotate_x(keyboard_y_rotation),  # 整体后倾
+        domain.translate(0, 0, z_offset),
+    ]
+    
+    return domain.compose(*transforms)
 
 def place_on_grid(row, column):
     return place_on_grid_base(row, column, lib)
 
 def point_on_grid(row, column, x, y, z):
+    """计算给定行列位置的点的最终位置"""
     point = mat.point3(x, y, z)
     tx_point = place_on_grid_base(row, column, mat) @ point
-
-    return tx_point[:3]
+    return mat.to_point(tx_point)
 
 def grid_position(row, col, shape):
     return place_on_grid(row, col)(shape)
