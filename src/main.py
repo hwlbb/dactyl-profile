@@ -1,9 +1,9 @@
 import datetime
 from math import radians, sin, cos
-from lib import *
-from shapes import *
-import lib
-import mat
+from .lib import *
+from .shapes import *
+from . import lib
+from . import mat
 
 switch_thickness = 2.0
 web_thickness = 1.5
@@ -1115,10 +1115,10 @@ def thumb_corner():
         ))
 
 def write_test():
-    render_to_file(right_shell(), 'things/right.scad')
-    render_to_file(left_shell(), 'things/left.scad')
-    render_to_file(bottom_plate(), 'things/right_bottom_plate.scad')
-    render_to_file(left_bottom_plate(), 'things/left_bottom_plate.scad')
+    render_to_file(right_shell(), 'output/right.scad')
+    render_to_file(left_shell(), 'output/left.scad')
+    render_to_file(bottom_plate(), 'output/right_bottom_plate.scad')
+    render_to_file(left_bottom_plate(), 'output/left_bottom_plate.scad')
 
 def run():
     write_test()

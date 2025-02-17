@@ -1,4 +1,4 @@
-from lib import *
+from .lib import *
 from math import radians, sin, cos
 
 SWITCH_RISER_RADIUS = 0.8
