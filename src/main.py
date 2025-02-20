@@ -4,38 +4,43 @@ from .lib import *
 from .shapes import *
 from . import lib
 from . import mat
+from .config import KeyboardConfig
 
-switch_thickness = 2.0
-web_thickness = 1.5
-switch_rim_thickness = 1.5
+# 初始化配置
+config = KeyboardConfig.create_default()
 
-post_width = 0.5
-post_rad = post_width / 2
-
-keyhole_size = 14.4
-keyswitch_height = 14
-keyswitch_width = 14
-
+# 使用配置中的值
+switch_thickness = config.switch_thickness
+switch_rim_thickness = config.switch_rim_thickness
+keyhole_size = config.switch_hole_size
+keyswitch_height = config.switch_height
+keyswitch_width = config.switch_width
 plate_outer_width = keyhole_size + switch_rim_thickness * 2
 
-max_num_rows = 4
-num_cols = 6
-num_pinky_columns = 2
+max_num_rows = config.max_rows
+num_cols = config.num_cols
+num_pinky_columns = config.num_pinky_columns
+cols_with_max_rows = config.cols_with_max_rows
 
-cols_with_max_rows = [2, 3]
-
-sa_profile_key_height = 12.7
+sa_profile_key_height = config.sa_profile_key_height
+sa_length = config.sa_top_length
+sa_double_length = config.sa_double_length
 cap_top_height = switch_thickness + sa_profile_key_height
 
-# extra space between the base of keys
-extra_height = 1.0
-extra_width = 2.5
-mount_height = keyswitch_height + 3.0
-mount_width = keyswitch_width + 3.0
-# use 10 for faster prototyping, 15 for real
-tenting_angle = 11.0  # 增加左右倾斜角度
-keyboard_y_rotation = 8.0  # 添加整体后倾角度
-z_offset = 8.0
+# 间距配置
+extra_height = config.extra_height
+extra_width = config.extra_width
+mount_height = config.mount_height
+mount_width = config.mount_width
+
+tenting_angle = config.tenting_angle
+keyboard_y_rotation = config.keyboard_y_rotation
+z_offset = config.z_offset
+
+# 支撑结构配置
+post_width = config.post_width
+post_rad = config.post_rad
+web_thickness = config.web_thickness
 
 should_include_risers = False
 
@@ -123,9 +128,6 @@ def single_switch_fn():
 single_switch = single_switch_fn()
 
 filled_switch = translate(0, 0, switch_thickness / 2.0)(cube(plate_outer_width, plate_outer_width, switch_thickness, center=True))
-
-sa_length = 18.25
-sa_double_length = 37.5
 
 def sa_cap_fn():
     # bl2 = sa_length / 2
@@ -1125,4 +1127,5 @@ def run():
     print('done')
 
 if __name__ == '__main__':
+
     run()
