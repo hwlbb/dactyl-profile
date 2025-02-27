@@ -1,4 +1,4 @@
-.PHONY: help install run watch clean test
+.PHONY: help install run watch clean test test-models
 
 help:
 	@echo "可用命令:"
@@ -8,6 +8,7 @@ help:
 	@echo "make watch       - 监视文件变化并自动重新生成"
 	@echo "make clean       - 清理生成的文件"
 	@echo "make test        - 运行测试"
+	@echo "make test-models - 生成测试模型"
 
 install:
 	pip install -e .
@@ -25,4 +26,7 @@ clean:
 	python -m src --clean
 
 test:
-	pytest 
+	pytest
+
+test-models:
+	python tests/test_model.py
