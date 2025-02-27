@@ -1,7 +1,6 @@
 import os
 import argparse
 import shutil
-from solid import scad_render_to_file
 from . import main
 
 def clean():

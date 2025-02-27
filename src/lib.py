@@ -5,7 +5,6 @@ lib.py - OpenSCAD 3D操作库
 """
 import solid
 import os
-import pathlib
 
 # 默认细分段数，影响圆形物体的平滑度
 default_segments = 18
