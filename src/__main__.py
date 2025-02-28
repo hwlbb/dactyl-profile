@@ -6,7 +6,6 @@ from . import main
 def clean():
     """清理生成的文件"""
     paths = [
-        'tests/output/*.scad',
         'output/*.scad',
         'dist',
         '*.egg-info'

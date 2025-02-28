@@ -65,9 +65,14 @@ class Composer(NativeSCAD):
         编译整个变换链
         """
         # 从最后一个操作开始，逐步向前应用每个变换
-        result = self.children[-1].compile()
-        for c in reversed(self.children[:-1]):
-            result = c._apply_to(result)
+        # result = self.children[-1].compile()
+        
+        # for c in reversed(self.children[:-1]):
+        #     result = c._apply_to(result)
+        # return result
+
+        result = self.children[1].compile()
+        result = self.children[0]._apply_to(result)
         return result
 
 
