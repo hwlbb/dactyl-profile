@@ -71,6 +71,18 @@ def test_multi_composer():
     ensure_test_output_dir()
     multi_composer_test.run_all_tests()
 
+def test_redesign():
+    """测试重新设计的lib库"""
+    from tests.modules import redesign_test
+    ensure_test_output_dir()
+    redesign_test.run_all_tests()
+
+def test_compare_switches():
+    """比较新旧库实现的开关组件"""
+    from tests.modules import compare_switches_test
+    ensure_test_output_dir()
+    compare_switches_test.run_all_tests()
+
 # 所有可用的测试
 ALL_TESTS = {
     'basic': test_basic_shapes,
@@ -80,6 +92,8 @@ ALL_TESTS = {
     'chain': test_chain,  # 新增的链式操作测试
     'compose': test_compose,  # 新增的compose函数测试
     'multi': test_multi_composer,  # 新增的多元素测试
+    'redesign': test_redesign,  # 添加redesign测试
+    'compare': test_compare_switches,  # 添加比较测试
     'all': None  # 特殊值，表示运行所有测试
 }
 

@@ -11,109 +11,147 @@ default_segments = 18
 
 # ======== 核心类 ========
 
-class NativeSCAD():
+class OpenSCADObject:
     """
-    基础包装类，包装Solid库的函数调用，支持链式操作。
-    例如：translate(1,2,3)(cube(10,10,10))
+    所有OpenSCAD对象的基础接口
+    定义了编译和应用的公共方法
+    """
+    def compile(self):
+        """编译为OpenSCAD对象"""
+        raise NotImplementedError("子类必须实现compile方法")
+        
+    def __call__(self, other):
+        """支持函数调用语法，应用变换到其他对象"""
+        raise NotImplementedError("子类必须实现__call__方法")
+
+
+class Shape(OpenSCADObject):
+    """
+    基础形状类（立方体、球体等）
     """
     def __init__(self, solid_fn, *args, **kwargs):
-        # 存储函数及其参数，延迟到compile时执行
-        def build_solid_fn():
-            return solid_fn(*args, **kwargs)
-        self.solid = build_solid_fn
-
+        # 存储形状函数和参数
+        self.solid_fn = solid_fn
+        self.args = args
+        self.kwargs = kwargs
+    
+    def compile(self):
+        """编译为OpenSCAD对象"""
+        return self.solid_fn(*self.args, **self.kwargs)
+    
     def __call__(self, other):
-        """
-        支持函数调用语法，例如：translate(x,y,z)(cube(...))
-        """
-        assert isinstance(other, NativeSCAD)
-        return Composer([self, other])
-
-    def _apply_to(self, other):
-        """
-        将当前变换应用到另一个对象上
-        """
-        return self.compile()(other)
-
-    def compile(self):
-        """
-        编译为实际的OpenSCAD对象
-        """
-        return self.solid()
+        """形状不能直接应用于其他对象"""
+        raise TypeError("形状对象不能直接应用于其他对象")
 
 
-class Composer(NativeSCAD):
+class Transform(OpenSCADObject):
     """
-    组合多个操作的类，按顺序应用变换
-    例如：translate(...)(rotate(...)(cube(...)))
+    变换类（平移、旋转等）
     """
-    def __init__(self, children):
-        assert len(children) > 0
-        self.children = children
-
-    def _apply_to(self, other):
-        """
-        从后向前应用所有变换
-        """
-        result = other
-        for c in reversed(self.children):
-            result = c._apply_to(result)
-        return result
-
+    def __init__(self, solid_fn, *args, **kwargs):
+        # 存储变换函数和参数
+        self.solid_fn = solid_fn
+        self.args = args
+        self.kwargs = kwargs
+    
     def compile(self):
-        """
-        编译整个变换链
-        """
-        # 从最后一个操作开始，逐步向前应用每个变换
-        # result = self.children[-1].compile()
+        """编译为OpenSCAD函数对象"""
+        return self.solid_fn(*self.args, **self.kwargs)
+    
+    def __call__(self, other):
+        """应用变换到其他对象"""
+        if not isinstance(other, OpenSCADObject):
+            raise TypeError("变换只能应用于OpenSCAD对象")
+            
+        # 创建变换链
+        return TransformChain([self, other])
+    
+    def apply_to(self, scad_obj):
+        """应用变换到已编译的OpenSCAD对象"""
+        return self.compile()(scad_obj)
+
+
+class TransformChain(OpenSCADObject):
+    """
+    变换链类，支持链式变换或多变换组合
+    """
+    def __init__(self, objects):
+        self.objects = objects
+    
+    def compile(self):
+        """编译整个变换链"""
+        # 简单情况：只有两个元素（一个变换一个对象）
+        if len(self.objects) == 2:
+            # 先编译最后一个对象（形状或另一个变换链）
+            result = self.objects[1].compile()
+            # 然后应用第一个变换
+            return self.objects[0].apply_to(result)
         
-        # for c in reversed(self.children[:-1]):
-        #     result = c._apply_to(result)
-        # return result
-
-        result = self.children[1].compile()
-        result = self.children[0]._apply_to(result)
+        # 复杂情况：多个变换
+        result = self.objects[-1].compile()  # 从形状开始
+        
+        # 特别注意变换的应用顺序必须是从后向前
+        for transform in reversed(self.objects[:-1]):
+            result = transform.apply_to(result)
+            print(f"应用变换: {transform}，当前结果: {result}")
+        return result
+    
+    def __call__(self, other):
+        """继续链式调用，添加新对象到变换链"""
+        if not isinstance(other, OpenSCADObject):
+            raise TypeError("变换只能应用于OpenSCAD对象")
+            
+        return TransformChain([self, other])
+        
+    def apply_to(self, scad_obj):
+        """将整个变换链应用到一个已编译的对象上"""
+        # 从后向前应用变换
+        result = scad_obj
+        # 注意：这里应用的是完整的变换列表，不跳过任何元素
+        for transform in reversed(self.objects):
+            if isinstance(transform, Transform):  # 只应用变换类型的元素
+                result = transform.apply_to(result)
         return result
 
 
-class Merger(NativeSCAD):
+class CSGOperation(OpenSCADObject):
     """
-    处理合并操作的类，如union()、difference()等
+    CSG操作类（并集、差集等）
     """
     def __init__(self, solid_fn, children):
-        self.solid = solid_fn
+        self.solid_fn = solid_fn
         self.children = children
-
-    def __call__(self, other):
-        raise RuntimeError('无法对合并操作执行调用')
-
-    def _apply_to(self, other):
-        raise RuntimeError('无法对其他对象应用合并操作')
-
+    
     def compile(self):
-        """
-        编译所有子对象并合并
-        """
-        return self.solid()(*[c.compile() for c in self.children])
+        """编译所有子对象并执行CSG操作"""
+        return self.solid_fn()(*[c.compile() for c in self.children])
+    
+    def __call__(self, other):
+        """CSG操作不能直接应用于对象"""
+        raise TypeError("CSG操作不能直接应用于对象")
 
+# 为了向后兼容，添加旧库的类名映射
+NativeSCAD = Transform
+Composer = TransformChain
+Merger = CSGOperation
 
 # ======== 变换函数 ========
 
 def translate(x, y, z):
-    """平移变换，移动对象到新位置"""
-    return NativeSCAD(solid.translate, [x, y, z])
+    """平移变换"""
+    return Transform(solid.translate, [x, y, z])
 
 def identity():
-    """恒等变换，不做任何改变"""
+    """恒等变换"""
     return translate(0, 0, 0)
 
 def scale(x, y, z):
     """缩放变换"""
-    return NativeSCAD(solid.scale, [x, y, z])
+    return Transform(solid.scale, [x, y, z])
 
 def rotate(*, a, v):
     """绕任意轴旋转"""
-    return NativeSCAD(solid.rotate, a=a, v=v)
+    return Transform(solid.rotate, a=a, v=v)
 
 def rotate_x(a):
     """绕X轴旋转a度"""
@@ -128,105 +166,95 @@ def rotate_z(a):
     return rotate(a=a, v=[0, 0, 1])
 
 def mirror(x, y, z):
-    """镜像变换，根据给定向量创建对象的镜像"""
-    return NativeSCAD(solid.mirror, [x, y, z])
+    """镜像变换"""
+    return Transform(solid.mirror, [x, y, z])
 
 def flip_lr():
-    """水平翻转（左右镜像）"""
+    """水平翻转"""
     return mirror(-1, 0, 0)
-
 
 # ======== 工具函数 ========
 
 def project(*args, **kwargs):
-    """将3D对象投影到2D平面"""
-    return NativeSCAD(solid.projection, *args, **kwargs)
+    """2D投影"""
+    return Transform(solid.projection, *args, **kwargs)
 
 def offset(*args):
-    """2D偏移操作，可用于放大或缩小2D形状"""
-    return NativeSCAD(solid.offset, *args)
+    """2D偏移操作"""
+    return Transform(solid.offset, *args)
 
 def extrude_linear(height):
-    """线性拉伸2D形状为3D对象"""
-    return NativeSCAD(solid.linear_extrude, height)
+    """拉伸操作"""
+    return Transform(solid.linear_extrude, height)
 
-def colour(r, g, b, z):
-    """设置颜色，r,g,b为0-255值，z为透明度(0-1)"""
-    return NativeSCAD(solid.color, [r/255.0, g/255.0, b/255.0, z])
-
+def colour(r, g, b, z=1):
+    """上色操作"""
+    return Transform(solid.color, [r/255.0, g/255.0, b/255.0, z])
 
 # ======== 函数式组合 ========
 
-def compose(*atoms):
+def compose(*transforms):
     """
-    组合多个变换为一个单一变换
-    例如：compose(translate(...), rotate_x(...), scale(...))
+    组合多个变换为一个变换链
+    参数顺序与应用顺序相反：
+    compose(translate, rotate, scale) 
+    先应用scale，再rotate，最后translate
     """
-    assert len(atoms) > 0
-    return Composer(list(reversed(atoms)))
-
+    if not transforms:
+        raise ValueError("compose需要至少一个变换")
+    
+    # 保持原始行为：反转变换列表
+    return TransformChain(list(reversed(transforms)))
 
 # ======== CSG操作 ========
 
 def union(*children):
-    """合并多个对象为一个整体"""
-    return Merger(solid.union, children)
+    """并集操作"""
+    return CSGOperation(solid.union, children)
 
 def hull(*children):
-    """创建包含所有给定对象的凸包"""
-    return Merger(solid.hull, children)
+    """凸包操作"""
+    return CSGOperation(solid.hull, children)
 
 def difference(*children):
-    """从第一个对象中减去其他所有对象"""
-    return Merger(solid.difference, children)
+    """差集操作"""
+    return CSGOperation(solid.difference, children)
 
 def intersection(*children):
-    """创建所有对象的交集部分"""
-    return Merger(solid.intersection, children)
-
+    """交集操作"""
+    return CSGOperation(solid.intersection, children)
 
 # ======== 基础形状 ========
 
 def cube(x, y, z, **kwargs):
-    """创建长方体"""
-    return NativeSCAD(solid.cube, [x, y ,z], **kwargs)
+    """创建立方体"""
+    return Shape(solid.cube, [x, y, z], **kwargs)
 
 def cylinder(r, h, segments=default_segments, **kwargs):
-    """创建圆柱体，r为半径，h为高度"""
-    return NativeSCAD(solid.cylinder, r=r, h=h, segments=segments, **kwargs)
+    """创建圆柱体"""
+    return Shape(solid.cylinder, r=r, h=h, segments=segments, **kwargs)
 
 def cylinderr1r2(r1, r2, h, segments=default_segments, **kwargs):
-    """创建圆台，r1为底部半径，r2为顶部半径，h为高度"""
-    return NativeSCAD(solid.cylinder, r1=r1, r2=r2, h=h, segments=segments, **kwargs)
+    """创建圆台"""
+    return Shape(solid.cylinder, r1=r1, r2=r2, h=h, segments=segments, **kwargs)
 
 def sphere(r, segments=default_segments, **kwargs):
-    """创建球体，r为半径"""
-    return NativeSCAD(solid.sphere, r=r, segments=segments, **kwargs)
+    """创建球体"""
+    return Shape(solid.sphere, r=r, segments=segments, **kwargs)
 
 def square(x, y, **kwargs):
-    """创建2D矩形"""
-    return NativeSCAD(solid.square, [x, y], **kwargs)
-
+    """创建矩形"""
+    return Shape(solid.square, [x, y], **kwargs)
 
 # ======== 输出函数 ========
 
 def render_to_file(obj, filename):
-    """
-    将3D模型渲染为OpenSCAD文件
-    obj: NativeSCAD对象
-    filename: 输出文件路径
-    """
-    # 确保filename是字符串
+    """将对象渲染到文件"""
     if filename is None:
         raise ValueError("输出文件名不能为None")
     
-    # 获取文件路径和文件名
     filepath = str(filename)
     out_dir = os.path.dirname(os.path.abspath(filepath))
-    
-    # 确保目录存在
     os.makedirs(out_dir, exist_ok=True)
     
-    # 将obj编译为OpenSCAD对象，并输出到文件
-    # 显式提供out_dir参数
     solid.scad_render_to_file(obj.compile(), filepath=filepath, out_dir=out_dir)
