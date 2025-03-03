@@ -80,20 +80,12 @@ class TransformChain(OpenSCADObject):
     
     def compile(self):
         """编译整个变换链"""
-        # 简单情况：只有两个元素（一个变换一个对象）
-        if len(self.objects) == 2:
-            # 先编译最后一个对象（形状或另一个变换链）
-            result = self.objects[1].compile()
-            # 然后应用第一个变换
-            return self.objects[0].apply_to(result)
-        
-        # 复杂情况：多个变换
-        result = self.objects[-1].compile()  # 从形状开始
+        # 从形状开始
+        result = self.objects[-1].compile()  
         
         # 特别注意变换的应用顺序必须是从后向前
         for transform in reversed(self.objects[:-1]):
             result = transform.apply_to(result)
-            print(f"应用变换: {transform}，当前结果: {result}")
         return result
     
     def __call__(self, other):
