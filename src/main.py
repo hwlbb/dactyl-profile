@@ -3,7 +3,8 @@ Dactyl 键盘生成器 - 主程序入口
 功能：生成人体工学分离式机械键盘的3D模型
 """
 from .lib import render_to_file
-from .case_utils import right_shell, left_shell, bottom_plate, left_bottom_plate
+# 修改导入路径，直接从case模块导入
+from .case import right_shell, left_shell, bottom_plate, left_bottom_plate
 
 def run():
     """生成所有需要的键盘模型文件"""

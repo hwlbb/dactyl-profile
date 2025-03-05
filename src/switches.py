@@ -60,3 +60,19 @@ def sa_cap_fn():
 
 # 创建SA键帽形状
 sa_cap = sa_cap_fn()
+
+# 添加在所有位置创建开关和键帽的函数
+def all_switches():
+    """创建所有按键开关"""
+    from .keyboard_utils import all_of_shape
+    return union(*all_of_shape(single_switch))
+
+def filled_switches():
+    """创建所有填充式按键(没有开孔)"""
+    from .keyboard_utils import all_of_shape
+    return union(*all_of_shape(filled_switch))
+
+def all_caps():
+    """创建所有键帽"""
+    from .keyboard_utils import all_of_shape
+    return union(*all_of_shape(sa_cap))
