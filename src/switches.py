@@ -10,30 +10,26 @@ from .keyboard_utils import (
 
 def single_switch_fn():
     """创建单个开关的形状"""
-    outer_width = keyhole_size + switch_rim_thickness * 2
-
+    outer_width = keyhole_size + switch_rim_thickness * 2  # 计算开关外部宽度
+    
+    # 创建四个边缘墙
     bottom_wall = cube(outer_width, switch_rim_thickness, switch_thickness)
     top_wall = translate(0, keyhole_size + switch_rim_thickness, 0)(bottom_wall)
-
     left_wall = cube(switch_rim_thickness, outer_width, switch_thickness)
     right_wall = translate(keyhole_size + switch_rim_thickness, 0, 0)(left_wall)
-
+    
+    # 创建卡扣突起部分
     nub_len = 2.75
     nub_cyl = translate(0, 0, -1)(rotate_x(90)(cylinder(1, nub_len, 30, center=True)))
     nub_cube = translate(-switch_rim_thickness / 2, 0, 0.)(cube(switch_rim_thickness, nub_len, 4, center=True))
     left_nub = translate(switch_rim_thickness, (outer_width) / 2, 0)(hull(nub_cyl, nub_cube))
-
+    
     right_nub_cube = translate(switch_rim_thickness / 2, 0, 0)(cube(switch_rim_thickness, nub_len, 4, center=True))
     right_nub = translate(-switch_rim_thickness + outer_width, (outer_width) / 2, 0)(hull(nub_cyl, right_nub_cube))
-
+    
+    # 合并所有部分并居中
     return translate(-outer_width/2, -outer_width/2, 0)(union(
-            bottom_wall,
-            top_wall,
-            left_wall,
-            right_wall,
-            left_nub,
-            right_nub,
-            ))
+            bottom_wall, top_wall, left_wall, right_wall, left_nub, right_nub))
 
 # 创建单个开关形状
 single_switch = single_switch_fn()
