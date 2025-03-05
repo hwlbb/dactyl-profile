@@ -74,36 +74,47 @@ class Transform(OpenSCADObject):
 class TransformChain(OpenSCADObject):
     """
     变换链类，支持链式变换或多变换组合
+    使用扁平化列表设计，避免嵌套结构，提高性能
+    
+    变换链通常的结构是：[transform1, transform2, ..., shape]
+    其中最后一个元素是要被变换的形状，前面的元素是要应用的变换
     """
     def __init__(self, objects):
-        self.objects = objects
+        # 扁平化处理：如果objects中包含TransformChain，展开它
+        flat_objects = []
+        for obj in objects:
+            if isinstance(obj, TransformChain):
+                # 展平嵌套的TransformChain
+                flat_objects.extend(obj.objects)
+            else:
+                flat_objects.append(obj)
+        self.objects = flat_objects
     
     def compile(self):
-        """编译整个变换链"""
-        # 从形状开始
-        result = self.objects[-1].compile()  
+        """
+        编译整个变换链
+        从最后一个元素（通常是形状）开始编译，然后依次应用前面的变换
+        变换应用顺序是从后向前，与数学上的函数复合一致
+        """
+        # 获取最后一个对象(通常是形状)并编译它
+        result = self.objects[-1].compile()
         
-        # 特别注意变换的应用顺序必须是从后向前
+        # 应用所有变换，从倒数第二个开始，逆序应用
         for transform in reversed(self.objects[:-1]):
+            # 直接应用变换，不需要类型检查，因为TransformChain的构造保证了这些都是变换
             result = transform.apply_to(result)
         return result
     
     def __call__(self, other):
-        """继续链式调用，添加新对象到变换链"""
+        """
+        继续链式调用，添加新对象到变换链
+        允许构建如translate()(rotate()(cube()))这样的链式表达式
+        """
         if not isinstance(other, OpenSCADObject):
             raise TypeError("变换只能应用于OpenSCAD对象")
             
-        return TransformChain([self, other])
-        
-    def apply_to(self, scad_obj):
-        """将整个变换链应用到一个已编译的对象上"""
-        # 从后向前应用变换
-        result = scad_obj
-        # 注意：这里应用的是完整的变换列表，不跳过任何元素
-        for transform in reversed(self.objects):
-            if isinstance(transform, Transform):  # 只应用变换类型的元素
-                result = transform.apply_to(result)
-        return result
+        # 创建包含所有现有变换加上新对象的新链
+        return TransformChain(self.objects + [other])
 
 
 class CSGOperation(OpenSCADObject):
