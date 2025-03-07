@@ -1,7 +1,3 @@
 """
-键盘外壳模块 - 整合所有外壳组件
+外壳系统 - 提供键盘外壳和底板实现
 """
-from .assembly import right_shell, left_shell, bottom_plate, left_bottom_plate
-
-# 导出主要函数，保持向后兼容
-__all__ = ['right_shell', 'left_shell', 'bottom_plate', 'left_bottom_plate']

@@ -1,6 +1,3 @@
-"""
-src包的主入口点，使python -m src命令能够正常工作
-"""
 import os
 import argparse
 import shutil
@@ -9,7 +6,7 @@ from . import main
 def clean():
     """清理生成的文件"""
     paths = [
-        'output/new/*.scad',
+        'output/*.scad',
         'dist',
         '*.egg-info'
     ]
@@ -25,8 +22,7 @@ def clean():
             print(f"清理 {path} 时出错: {e}")
 
 def main_cli():
-    """命令行入口函数"""
-    parser = argparse.ArgumentParser(description='Dactyl Keyboard Generator (新架构)')
+    parser = argparse.ArgumentParser(description='Dactyl Keyboard Generator')
     parser.add_argument('--watch', '-w', action='store_true',
                        help='监视文件变化并自动重新生成')
     parser.add_argument('--clean', '-c', action='store_true',
@@ -38,8 +34,12 @@ def main_cli():
         clean()
         return
     
+    # 确保output目录存在
+    os.makedirs('output', exist_ok=True)
+    
     # 生成键盘
     main.run()
+    print('生成完成: output/*.scad')
     
     if args.watch:
         from watchdog.observers import Observer
@@ -57,6 +57,7 @@ def main_cli():
                     if current_time - self.last_modified > self.cooldown:
                         print('检测到文件变化，重新生成...')
                         main.run()
+                        print('生成完成: output/*.scad')
                         self.last_modified = current_time
         
         observer = Observer()
@@ -75,4 +76,4 @@ def main_cli():
             print('已停止监视')
 
 if __name__ == '__main__':
-    main_cli()
+    main_cli() 
