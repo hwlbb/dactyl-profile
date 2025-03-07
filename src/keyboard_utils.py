@@ -1,5 +1,15 @@
 """
 键盘工具函数 - 基本的键盘定位和形状操作函数
+
+坐标系说明：
+- X轴：从左到右
+- Y轴：从近到远（远离使用者方向为正）
+- Z轴：从下到上（垂直向上为正）
+
+旋转说明：
+- 绕X轴旋转：调整前后倾斜（正值使前部向下倾斜）
+- 绕Y轴旋转：调整左右倾斜（正值使中部抬高成帐篷状）
+- 绕Z轴旋转：调整水平旋转（正值为顺时针，负值为逆时针）
 """
 from math import radians, sin, cos
 from .lib import *
@@ -27,7 +37,7 @@ cols_with_max_rows = config.cols_with_max_rows
 sa_profile_key_height = config.sa_profile_key_height
 sa_length = config.sa_top_length
 sa_double_length = config.sa_double_length
-cap_top_height = switch_thickness + sa_profile_key_height
+total_key_height = switch_thickness + sa_profile_key_height
 
 # 间距配置
 extra_height = config.extra_height
@@ -36,7 +46,7 @@ mount_height = config.mount_height
 mount_width = config.mount_width
 
 tenting_angle = config.tenting_angle
-keyboard_y_rotation = config.keyboard_y_rotation
+back_tilt_angle = config.back_tilt_angle
 z_offset = config.z_offset
 
 # 支撑结构配置
@@ -49,13 +59,13 @@ bottom_height = 1.5
 
 should_include_risers = False
 
-def is_pinky(col):
+def is_pinky_column(col):
     """判断是否为小拇指列"""
     return col >= num_cols - num_pinky_columns
 
-# aka: alpha
-def row_curve_deg(col):
-    """确定每列的行曲率"""
+# aka: alpha - 每列的行曲率角度（垂直方向曲率）
+def row_curve_angle_for_column(col):
+    """确定每列的行曲率角度（垂直方向曲率）"""
     if col == 1:  # 食指列
         return 20  # 增加弯曲度
     elif col >= num_cols - num_pinky_columns:  # 小拇指列
@@ -63,23 +73,23 @@ def row_curve_deg(col):
     else:
         return 17  # 保持其他列不变
 
-# aka: beta
-col_curve_deg = 4.0
+# aka: beta - 列曲率角度（水平方向曲率）
+col_curve_angle = 4.0
 
-column_radius = cap_top_height + ((mount_width + extra_width) / 2) / sin(radians(col_curve_deg) / 2)
+# 列曲率半径（水平方向曲率）
+column_curvature_radius = total_key_height + ((mount_width + extra_width) / 2) / sin(radians(col_curve_angle) / 2)
 
-def row_radius(col):
-    """计算每列的行半径"""
-    return cap_top_height + ((mount_height + extra_height) / 2) / sin(radians(row_curve_deg(col)) / 2)
+def row_curvature_radius(col):
+    """计算每列的行曲率半径（垂直方向曲率）"""
+    return total_key_height + ((mount_height + extra_height) / 2) / sin(radians(row_curve_angle_for_column(col)) / 2)
 
-# default 3
-# controls left-right tilt / tenting (higher number is more tenting)
-center_col = 3
-center_row = 1
+# 曲率参考中心（水平和垂直方向的曲率参考点）
+center_col = 3  # 中心列（从0开始，通常是无名指列）
+center_row = 1  # 中心行（从0开始，通常是主行）
 
 def column_extra_transform(col):
     """为特定列应用额外的变换"""
-    if is_pinky(col):
+    if is_pinky_column(col):
         return compose(
             rotate_x(6),
             rotate_y(-3)
@@ -111,50 +121,54 @@ def bottom_hull(shape):
     return hull(shape, bottom_transform(0.1)(shape))
 
 def column_offset(col):
-    """计算列的偏移量"""
-    if col == 2:
-        return [0, 7, -3]
-    elif col == 3:
-        return [0, 3, -1.5]  # 将z轴偏移从-0.5改为-3.5
-    elif is_pinky(col):
-        return [1.0, -12.5, 5.0]
-    else:
-        return [0, 0, 0]
+    """计算列的偏移量 [x, y, z]
+    - x: 正值向右偏移，负值向左偏移
+    - y: 正值向远离使用者方向偏移，负值向靠近使用者方向偏移
+    - z: 正值向上抬高，负值向下降低
+    """
+    if col == 2:  # 中指列
+        return [0, 7, -3]  # 向后偏移，略降低
+    elif col == 3:  # 无名指列
+        return [0, 3, -1.5]  # 向后偏移，略降低
+    elif is_pinky_column(col):  # 小拇指列
+        return [1.0, -12.5, 5.0]  # 向右偏移，大幅向前，抬高
+    else:  # 大拇指和食指列
+        return [0, 0, 0]  # 无偏移
 
-def col_z_rotate(col):
-    """计算列的Z轴旋转角度"""
-    if is_pinky(col):
+def column_z_rotation(col):
+    """计算列的Z轴旋转角度（主要用于小拇指区域）"""
+    if is_pinky_column(col):
         return -3.0
     else:
         return 0
 
 def place_on_grid_base(row, column, domain):
     """计算给定行列位置的变换矩阵"""
-    column_angle = col_curve_deg * (center_col - column)
-    row_angle = row_curve_deg(column) * (center_row - row)
+    column_angle = col_curve_angle * (center_col - column)
+    row_angle = row_curve_angle_for_column(column) * (center_row - row)
 
     # 使用矩阵乘法组合所有变换
     transforms = [
-        # Row Sphere
-        domain.translate(0, 0, -row_radius(column)),
+        # 垂直方向曲率（X轴旋转）- 先上移到曲率中心，旋转，再下移回原位
+        domain.translate(0, 0, -row_curvature_radius(column)),
         domain.rotate_x(row_angle),
-        domain.translate(0, 0, row_radius(column)),
+        domain.translate(0, 0, row_curvature_radius(column)),
         
-        # Col sphere
-        domain.translate(0, 0, -column_radius),
+        # 水平方向曲率（Y轴旋转）- 先上移到曲率中心，旋转，再下移回原位
+        domain.translate(0, 0, -column_curvature_radius),
         domain.rotate_y(column_angle),
-        domain.translate(0, 0, column_radius),
+        domain.translate(0, 0, column_curvature_radius),
 
-        # Z Fix
-        domain.rotate_z(col_z_rotate(column)),
+        # Z轴旋转调整（主要用于小拇指区域）
+        domain.rotate_z(column_z_rotation(column)),
 
-        # Column offset
+        # 列位置偏移调整（调整不同列的位置和高度）
         domain.translate(*column_offset(column)),
         
-        # Misc
-        domain.rotate_y(tenting_angle),  # 左右倾斜
-        domain.rotate_x(keyboard_y_rotation),  # 整体后倾
-        domain.translate(0, 0, z_offset),
+        # 整体键盘调整
+        domain.rotate_y(tenting_angle),  # 左右倾斜（绕Y轴）
+        domain.rotate_x(back_tilt_angle),  # 整体后倾（绕X轴）
+        domain.translate(0, 0, z_offset),  # 基础高度调整
     ]
     
     return domain.compose(*transforms)

@@ -15,8 +15,8 @@ class KeyboardConfig:
         self.cols_with_max_rows = [2, 3]  # 拥有最大行数的列
         
         # 键盘角度配置
-        self.tenting_angle = 11.0  # 左右倾斜角度
-        self.keyboard_y_rotation = 8.0  # 键盘后倾角度
+        self.tenting_angle = 11.0  # 左右倾斜角度（绕Y轴）
+        self.back_tilt_angle = 11.0  # 键盘后倾角度（绕X轴）
         self.z_offset = 8.0  # Z轴偏移量
 
         # 支撑结构配置
